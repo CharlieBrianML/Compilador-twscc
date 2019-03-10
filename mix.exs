@@ -6,6 +6,7 @@ defmodule ProyectoCompilador.MixProject do
       app: :proyecto_compilador,
       version: "0.1.0",
       elixir: "~> 1.8",
+      escript: [main_module: Proyecto_compilador],
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
