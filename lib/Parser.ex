@@ -25,7 +25,7 @@ defmodule Parser do
     {nil, token_list,func}= parse_function(token_list);
     IO.puts("*NODO PROGRAMA FINALIZADO")
     IO.inspect(token_list, label: "Lista de tokens restantes");
-    ast={:program,[func]}
+    ast={:program,[func]}#dEFINICION DEL ARBOL
   end
 
   def parse_function(token_list) do
@@ -50,7 +50,7 @@ defmodule Parser do
     {g, token_list} = parsear(token_list, :close_brace);
     IO.inspect(g, label: "T");
     IO.puts("*NODO FUNCION FINALIZADO")
-    func={:function,[a,b,c,d,e,state,g]}
+    func={:function,[a,b,c,d,e,state,g]}##aqui se agregan los nodos
     {nil, token_list, func};  ##se vuelve a poner, es lo que devolverá esta funcion
   end
 
@@ -68,7 +68,8 @@ defmodule Parser do
     IO.puts("*NODO STATEMENT FINALIZADO")
     #devuelve nil, token para que function continue utilizando la lista
 
-    state={:statement,[h,exp,j]}
+    state={:statement,[h,exp,j]}#definicion de la expresion statement
+
     {nil, token_list,state};
 
   end
