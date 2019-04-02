@@ -2,51 +2,47 @@ defmodule Generador_codigo do
 
   def assembly(ast) do
 
-    #f = fn x -> IO.write "#{x} " end
-    IO.write "\npostorder:  "
-
-    code = postorder(ast, "")
-    IO.puts("\n")
-    IO.puts(code)
-
+    #IO.write "\nPostorden del AST\n"
+    #llama a la funcion que recorre en post orden y devuelve el código
+    code = postorden(ast, "")
 
   end
   #sin hijos el nodo
-  defp postorder({}, code), do: code;
+  defp postorden({}, code), do: code;
   #nodo con hijos
-  defp postorder({_atomo, value, izquierda ,derecha }, code) do
-    code = postorder(izquierda, code)
-    code = postorder(derecha, code) #devuelve un ok y continua
-    #IO.puts(value)
-    #IO.inspect(code)
-    codigo_gen(value, code);
+  defp postorden({atomo, value, izquierda ,derecha }, code) do
+    #recursividad, revisa {:node, data, {izquierda}, {}}
+    code = postorden(izquierda, code)
+    #recursividad, revisa {:node, data, {}, {derecha}}
+    code = postorden(derecha, code)
+    #si ya no encuentra más hijos, extrae el valor, genera el código y concatenalo con "code"
+    #IO.inspect(value, label: "Dato obtenido")
+    codigo_gen(atomo, value, code);
   end
-
-  def codigo_gen("program", codigo) do
+#funciones "sobreescritas"
+  def codigo_gen(:program, _, codigo) do
     """
     .section        __TEXT,__text,regular,pure_instructions
     .p2align        4, 0x90
-    """ <> codigo
+    """ <> codigo #concatena esto antes del codigo
   end
 
-  def codigo_gen("main_Keyword", codigo) do
+  def codigo_gen(:function, _, codigo) do
     """
       .globl  _main         ## -- Begin function main
   _main:                    ## @main
-  """ <> codigo
+  """ <> codigo #concatena esto antes del codigo
   end
 
-  def codigo_gen(8709, codigo) do
-    "$#{8709}"
+  def codigo_gen(:constant, value, _) do
+    "$#{value}" #guarda el valor de la constate
   end
-
-  def codigo_gen("return", codigo) do
+  ##pega el valor de la constante y añade una instruccion return
+  def codigo_gen(:return_Keyword, _, codigo) do
     """
         movl    #{codigo}, %eax
         ret
     """
   end
-
-
 
 end
