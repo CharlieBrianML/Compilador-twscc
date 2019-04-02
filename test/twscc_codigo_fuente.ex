@@ -4,7 +4,7 @@ defmodule Proyecto_compilador do #version 0.8, falta arbol y generador de codigo
   """
 
   def main(argv) do
-    IO.puts("Holi")
+
    case length(argv) do
       0 -> IO.puts("Compilador de C de twscc. Escriba --help para la ayuda.");
       1 -> is_help  = Enum.at(argv, 0) =~ "--help";
