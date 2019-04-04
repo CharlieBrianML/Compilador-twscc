@@ -1,12 +1,17 @@
 defmodule Parser do
 
   def parsero(tl) do
-    parse_program(tl);
+    try do
+      parse_program(tl);
+    rescue
+      #no hacer nada, dejar que el orquestador indique que hubo un error de parseo y no podrá generar el árbol
+      MatchError -> nil;
+    end
   end
 
   def parse_program(tl) do
-    {tl, func_node}= parse_function(tl);
-    ast={:program, "program", func_node, {}} #raiz, finaliza árbol
+    {_, func_node}= parse_function(tl);
+    {:program, "program", func_node, {}} #raiz, finaliza árbol
   end
 
   def parse_function(tl) do
@@ -36,32 +41,29 @@ defmodule Parser do
   def parse_exp(tl) do
     {tl, node_exp} =
     case List.first(tl) do
-      {:constant, _} -> parse_constant(tl);
+      {:constant,_} -> parse_constant(tl);
       #Aquí se ampliará la gramática conforme las entregas
       ############################
       ############################
       ############################
+      _ -> IO.puts("Error: falta una expresión después de return");
     end
     {tl, node_exp}
   end
 
   def parse_constant(tl) do
-    #generando el nodo de la constante
     {a, tl} = parsear_entero(tl)
-    {tl, {elem(a, 0), elem(a, 1), {}, {}} }
-    #lista restante tokens, {:constant, value, {}, {}}. Constantes son elementos terminales
+    {tl, {elem(a, 0), elem(a, 1), {}, {}}}
   end
 
   def parsear(lista, atom) do
-    #extrae primer elemento de la lista y lo compara con átomo o si es tupla {constante, 4}
-    if (List.first(lista) == atom) do
-      #devuelve el primer elemento de la lista y bórralo
-      {List.first(lista), List.delete(lista, atom)};
-    else
-      IO.puts("Error en el parseo");
-      #devuelve la misma lista sin alterar.
-      {nil, lista}
-    end
+      #extrae primer elemento de la lista y lo compara con átomo o si es tupla {constante, 4}
+      if (List.first(lista) == atom) do
+        #devuelve el primer elemento de la lista y bórralo
+        {List.first(lista), List.delete(lista, atom)};
+      else
+        IO.inspect(atom, label: "Error: falta un ");
+      end
   end
 
   def parsear_entero(lista) do
@@ -71,7 +73,7 @@ defmodule Parser do
       #devuelve el primer elemento de la lista y bórralo
       {List.first(lista), List.delete(lista, List.first(lista))};
     else
-      IO.puts("Error al parsear una constante entera.");
+      IO.puts("Error: número entero inválido");
     end
   end
 

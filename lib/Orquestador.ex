@@ -1,13 +1,15 @@
 defmodule Orquestador do
 
   def manager(arg, file_adress) do
-
+    try do
     file_content= File.read!(file_adress); ##lectura del archivo
     tokens_separados =  Lexer.scan_word(file_content); #generación de Tokens
     ast = Parser.parsero(tokens_separados); #generación del árbol
     ensamblador=Generador_codigo.assembly(ast); #generación del código
-
+    ruta_ensamblador = String.replace_trailing(file_adress, ".c", ".s");#se cambiará la extención del archivo en la ruta especificada
+    #Linker.genera_archivo_binario(ensamblador,ruta_ensamblador);
     case arg do
+      #nil  -> IO.inspect(ruta_ensamblador);
       "-t" -> IO.inspect(tokens_separados);
       "-a" -> IO.inspect(ast);
       "-s" -> IO.inspect(ensamblador)
@@ -16,6 +18,11 @@ defmodule Orquestador do
                    IO.puts(ensamblador)
       nil -> :ok
     end
-
+  rescue
+    ##mostrar un mensaje de que no se pudo leer el archivo
+    File.Error -> IO.puts("Error: no se pudo leer el archivo de código fuente. ¿Es correcta la ruta?");
+    FunctionClauseError -> IO.puts("Error: no se pudo generar el código ensamblador.");
   end
+  end
+
 end

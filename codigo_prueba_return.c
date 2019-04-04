@@ -1,12 +1,8 @@
-
-
-int main(){
-
-
-	return8709;
-
+int main() {
+    return 5;
 
 }
+
 
 
 
