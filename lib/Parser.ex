@@ -1,80 +1,71 @@
 defmodule Parser do
 
-  def parsero(tl) do
-    try do
+  def main(tl) do
       parse_program(tl);
-    rescue
-      #no hacer nada, dejar que el orquestador indique que hubo un error de parseo y no podrá generar el árbol
-      MatchError -> nil;
-    end
   end
 
   def parse_program(tl) do
-    {_, func_node}= parse_function(tl);
-    {:program, "program", func_node, {}} #raiz, finaliza árbol
+    {:program, "program", parse_function(tl), {}} #raiz, finaliza árbol y lo devuelve a main
   end
 
   def parse_function(tl) do
-    #{elemento extraido, lista tokens} a almacenar en la variable. Util para el AST}
-    {_a, tl} = parsear(tl, :int_Keyword);
-    {_b, tl} = parsear(tl, :main_Keyword);
-    {_c, tl} = parsear(tl, :open_paren);
-    {_d, tl} = parsear(tl, :close_paren);
-    {_e, tl} = parsear(tl, :open_brace);
-    ##antes de construir el nodo de la funcion main, parse las declaraciones a continuacion
-    {tl, state_node} = parse_statement(tl);
-    #si el parseo anterior fue correcto, finaliza el nodo funcion y créalo hacia arriba
-    {_, tl} = parsear(tl, :close_brace)
-    {tl, {:function, "main", state_node, {}}};  ##se vuelve a poner, es lo que devolverá esta funcion
+    #ir revisando si existe el elemento en la lista de tokens
+    remain_tl = tl
+       |> parse(:int_Keyword)
+       |> parse(:main_Keyword)
+       |> parse(:open_paren)
+       |> parse(:close_paren)
+       |> parse(:open_brace)
+    #ahora revisa las declaraciones, si todo es correcto devuelve un nodo y continua el parseo
+    [tl, state_node] = parse_statement(remain_tl);
+    tl |> parse(:close_brace)
+    {:function, "main", state_node, {}};  ##se vuelve a poner, es lo que devolverá esta funcion
   end
 
   def parse_statement(tl) do
-    {h, tl} = parsear(tl, :return_Keyword);
-    #deriva una expresión a partir desde aquí
-    {tl, exp_node} = parse_exp(tl);
-    #si el parseo fue correcto, finaliza el parse del nodo Statement y llámalo "Return"
-    {_J, tl} = parsear(tl, :semicolon);
-    state_node={h, "return" , exp_node, {}}
-    {tl, state_node};
+    #devuelve los tokens restantes y el atomo extraido para el nombre del nodo
+    [remain_tl, elem] = tl |> parse_ret_value(:return_Keyword)
+    [tl, exp_node] = parse_exp(remain_tl);
+    remain_tl = tl |> parse(:semicolon)
+    [remain_tl, {elem, "return" , exp_node, {}}];
   end
 
   def parse_exp(tl) do
-    {tl, node_exp} =
+    #tokens restantes, atomo extraido y su dato para el nodo
+    [remain_tl, elem_atom, value] =
     case List.first(tl) do
-      {:constant,_} -> parse_constant(tl);
-      #Aquí se ampliará la gramática conforme las entregas
-      ############################
-      ############################
-      ############################
+      {:constant, _} ->  tl |> parse_atom_value(:constant)
       _ -> IO.puts("Error: falta una expresión después de return");
     end
-    {tl, node_exp}
+    [remain_tl, {elem_atom, value, {}, {}}]
   end
 
-  def parse_constant(tl) do
-    {a, tl} = parsear_entero(tl)
-    {tl, {elem(a, 0), elem(a, 1), {}, {}}}
-  end
-
-  def parsear(lista, atom) do
-      #extrae primer elemento de la lista y lo compara con átomo o si es tupla {constante, 4}
-      if (List.first(lista) == atom) do
-        #devuelve el primer elemento de la lista y bórralo
-        {List.first(lista), List.delete(lista, atom)};
-      else
-        IO.inspect(atom, label: "Error: falta un ");
-      end
-  end
-
-  def parsear_entero(lista) do
-    #extrae primer elemento de la lista y lo compara con átomo o si es tupla {constante, 4}
-    #entero de 16 bits sin signo
-    if Enum.member?(0..4294967295, elem(List.first(lista), 1)) do
-      #devuelve el primer elemento de la lista y bórralo
-      {List.first(lista), List.delete(lista, List.first(lista))};
-    else
-      IO.puts("Error: número entero inválido");
+    def parse(tl, atom) do
+      if List.first(tl) == atom do  #si hace match con el token
+         Enum.drop(tl, 1); #elimina de la lista el token
+       else
+         IO.inspect(atom, label: "Error al parsear: Falta el elemento")
+         spawn_link fn -> exit(1) end #lanzar un error matando al proceso en sí para interrumpir la ejecucion
+       end
     end
-  end
 
+    def parse_ret_value(tl, atom) do
+      if List.first(tl) == atom do #si hace match con el token
+          [Enum.drop(tl, 1), List.first(tl)] #elimina de la lista el token
+          #regresa tokens restante y el valor del átomo
+       else
+         IO.inspect(atom, label: "Error al parsear: Falta el elemento")
+         spawn_link fn -> exit(1) end
+       end
+    end
+
+    def parse_atom_value(tl, atom) do
+      if elem(List.first(tl), 0) == atom do #si hace match con el token
+          [Enum.drop(tl, 1), elem(List.first(tl), 0), elem(List.first(tl), 1)] #elimina de la lista el token
+          #regresa tokens restantes, valor del atomo y dato que tendrá el nodo
+       else
+         IO.inspect(atom, label: "Error al parsear: Falta el elemento")
+         spawn_link fn -> exit(1) end
+       end
+    end
 end

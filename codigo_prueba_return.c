@@ -1,9 +1,3 @@
-int main() {
+int main () {
     return 5;
-
 }
-
-
-
-
-
